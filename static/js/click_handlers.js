@@ -1,4 +1,5 @@
 import $ from "jquery";
+import { data } from "jquery";
 import _ from "lodash";
 import tippy from "tippy.js";
 import WinChan from "winchan";
@@ -18,6 +19,7 @@ import * as compose_state from "./compose_state";
 import {media_breakpoints_num} from "./css_variables";
 import * as dark_theme from "./dark_theme";
 import * as emoji_picker from "./emoji_picker";
+import * as flatpickr from "./flatpickr";
 import * as hash_util from "./hash_util";
 import * as hotspots from "./hotspots";
 import * as message_edit from "./message_edit";
@@ -412,6 +414,55 @@ export function initialize() {
     $("body").on("click", ".message_header .on_hover_topic_unmute", (e) => {
         e.stopPropagation();
         mute_or_unmute_topic($(e.target), false);
+    });
+
+    function on_message_timestamp_selection(test){
+        data.narrow = "[{\"negated\":false,\"operator\":\"stream\",\"operand\":27},{\"negated\":false,\"operator\":\"topic\",\"operand\":\"blue MOBILE has been linking slowly\"}]"
+        data.num_after =50
+        data.num_before = 50
+        data.anchor = "3088"
+        data.anchor_date = test
+        debugger;
+        channel.get({
+            data,
+            url: "/json/messages",
+            success(data) {
+                debugger;
+               console.log(data);
+            },
+        })
+    }
+
+    // DATE PICK
+
+    $("body").on("click", ".message_header .recipient_row_date", (e) => {
+        e.stopPropagation();
+        flatpickr.show_flatpickr(
+            e.target,
+            on_message_timestamp_selection,
+            new Date(),
+            {
+                position: "below",
+                closeOnSelect: false,
+                enableTime: false,
+            },
+        );
+    });
+
+    // MESSAGE ROW DATE PICK
+
+    $("body").on("click", ".message_row .date_row", (e) => {
+        e.stopPropagation();
+        flatpickr.show_flatpickr(
+            e.target,
+            on_message_timestamp_selection,
+            new Date(),
+            {
+                position: "auto center",
+                closeOnSelect: false,
+                enableTime: false,
+            },
+        );
     });
 
     // RECENT TOPICS
