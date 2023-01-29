@@ -416,36 +416,55 @@ export function initialize() {
         mute_or_unmute_topic($(e.target), false);
     });
 
-    function on_message_timestamp_selection(test){
-        data.narrow = "[{\"negated\":false,\"operator\":\"stream\",\"operand\":27},{\"negated\":false,\"operator\":\"topic\",\"operand\":\"blue MOBILE has been linking slowly\"}]"
-        data.num_after =50
-        data.num_before = 50
-        data.anchor = "3088"
-        data.anchor_date = test
+    function on_message_timestamp_selection(date, parent){
+        // data.narrow = "[{\"negated\":false,\"operator\":\"stream\",\"operand\":27},{\"negated\":false,\"operator\":\"topic\",\"operand\":\"blue MOBILE has been linking slowly\"}]"
+        // data.num_after =1
+        // data.num_before = 1
+        // data.anchor = "date"
+        // data.anchor_date = date
+        // debugger;
+        // channel.get({
+        //     data,
+        //     url: "/json/messages",
+        //     success(data) {
+        //        console.log(data);
+        //     },
+        // })
+        var stream = $(parent).siblings(".stream_label").text();
+        var topic = $(parent).siblings(".recipient_bar_controls").children(".zulip-icon").attr("data-topic-name");
+        if(stream == ""){
+            stream = $(parent).parent().siblings(".message_header").find(".stream_label").text();
+            topic = $(parent).parent().siblings(".message_header").find(".zulip-icon").attr("data-topic-name") 
+        }
         debugger;
-        channel.get({
-            data,
-            url: "/json/messages",
-            success(data) {
-                debugger;
-               console.log(data);
-            },
-        })
+        narrow.activate(
+            [
+                {operator: "stream", operand: stream},
+                {operator: "topic", operand: topic},
+            ],
+            {trigger: "date", anchor_date: date},
+        );
+
     }
 
     // DATE PICK
 
     $("body").on("click", ".message_header .recipient_row_date", (e) => {
         e.stopPropagation();
+        var date = new Date();
+        date.setHours(0);
+        date.setMinutes(0);
+        date.setSeconds(0);
         flatpickr.show_flatpickr(
             e.target,
             on_message_timestamp_selection,
-            new Date(),
+            date,
             {
                 position: "below",
                 closeOnSelect: false,
                 enableTime: false,
             },
+            e.currentTarget,
         );
     });
 
@@ -453,15 +472,20 @@ export function initialize() {
 
     $("body").on("click", ".message_row .date_row", (e) => {
         e.stopPropagation();
+        var date = new Date();
+        date.setHours(0);
+        date.setMinutes(0);
+        date.setSeconds(0);
         flatpickr.show_flatpickr(
             e.target,
             on_message_timestamp_selection,
-            new Date(),
+            date,
             {
                 position: "auto center",
                 closeOnSelect: false,
                 enableTime: false,
             },
+            e.currentTarget,
         );
     });
 

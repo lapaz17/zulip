@@ -10,7 +10,7 @@ function is_numeric_key(key) {
     return ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].includes(key);
 }
 
-export function show_flatpickr(element, callback, default_timestamp, options = {}) {
+export function show_flatpickr(element, callback, default_timestamp, options = {}, parent) {
     const $flatpickr_input = $("<input>").attr("id", "#timestamp_flatpickr");
 
     const instance = $flatpickr_input.flatpickr({
@@ -109,7 +109,7 @@ export function show_flatpickr(element, callback, default_timestamp, options = {
     });
 
     $container.on("click", ".flatpickr-confirm", () => {
-        callback($flatpickr_input.val());
+        callback($flatpickr_input.val(), parent);
         instance.close();
         instance.destroy();
     });

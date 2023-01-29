@@ -503,6 +503,7 @@ export function activate(raw_operators, opts) {
     if (id_info.target_id === id_info.final_select_id) {
         then_select_offset = opts.then_select_offset;
     }
+    const anchor_date = opts.anchor_date;
 
     const select_immediately = id_info.local_select_id !== undefined;
 
@@ -529,10 +530,13 @@ export function activate(raw_operators, opts) {
             default:
                 anchor = id_info.final_select_id;
         }
+        if(opts.trigger == 'date'){
+            anchor = "date"
+        }
 
         message_fetch.load_messages_for_narrow({
             anchor,
-            cont() {
+            cont(data, options) {
                 if (!select_immediately) {
                     update_selection({
                         id_info,
@@ -544,6 +548,7 @@ export function activate(raw_operators, opts) {
                 maybe_report_narrow_time(msg_list);
             },
             msg_list,
+            anchor_date,
         });
     }
 
