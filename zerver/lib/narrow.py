@@ -1071,6 +1071,7 @@ def limit_query_to_range(
         before_query = before_query.where(id_col <= anchor_date)
         before_query = before_query.order_by(id_col.desc())
         before_query = before_query.limit(num_before)
+        return before_query.self_group(), after_query.self_group()
 
 
     if need_both_sides:
@@ -1275,20 +1276,23 @@ def fetch_messages(
             first_visible_message_id=first_visible_message_id,
             anchor_date=anchor_date,
         )
-        # orderType = column("message_date_sent", DateTime)
-        # if(anchor_date is None):
+
         orderType = column("message_id", Integer)
-        
+        rows = []
+        if(anchor_date is not None):
+            index = 0
             
-        main_query = query.subquery()
-        query = (
-            select(*main_query.c)
-            .select_from(main_query)
-            .order_by(orderType.asc())
-        )
-        # This is a hack to tag the query we use for testing
-        query = query.prefix_with("/* get_messages */")
-        rows = list(sa_conn.execute(query).fetchall())
+            rows_before = execute_query(query[0], sa_conn, orderType)
+            rows_after = execute_query(query[1], sa_conn, orderType)
+            
+            if(len(rows_after) == 0):
+                anchor = rows_before[0][0]   
+            else:
+                anchor = rows_after[0][0]  
+            rows += rows_before
+            rows += rows_after   
+        else:
+            rows = execute_query(query, sa_conn, orderType)
 
     query_info = post_process_limited_query(
         rows=rows,
@@ -1311,3 +1315,15 @@ def fetch_messages(
         include_history=include_history,
         is_search=is_search,
     )
+
+def execute_query(query, sa_conn, orderType):
+    main_query = query.subquery()
+    query = (
+            select(*main_query.c)
+            .select_from(main_query)
+            .order_by(orderType.asc())
+        )
+        # This is a hack to tag the query we use for testing
+    query = query.prefix_with("/* get_messages */")
+    rows = list(sa_conn.execute(query).fetchall())
+    return rows

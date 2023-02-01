@@ -417,26 +417,12 @@ export function initialize() {
     });
 
     function on_message_timestamp_selection(date, parent){
-        // data.narrow = "[{\"negated\":false,\"operator\":\"stream\",\"operand\":27},{\"negated\":false,\"operator\":\"topic\",\"operand\":\"blue MOBILE has been linking slowly\"}]"
-        // data.num_after =1
-        // data.num_before = 1
-        // data.anchor = "date"
-        // data.anchor_date = date
-        // debugger;
-        // channel.get({
-        //     data,
-        //     url: "/json/messages",
-        //     success(data) {
-        //        console.log(data);
-        //     },
-        // })
         var stream = $(parent).siblings(".stream_label").text();
         var topic = $(parent).siblings(".recipient_bar_controls").children(".zulip-icon").attr("data-topic-name");
         if(stream == ""){
             stream = $(parent).parent().siblings(".message_header").find(".stream_label").text();
             topic = $(parent).parent().siblings(".message_header").find(".zulip-icon").attr("data-topic-name") 
         }
-        debugger;
         narrow.activate(
             [
                 {operator: "stream", operand: stream},
