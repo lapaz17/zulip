@@ -1286,7 +1286,7 @@ def fetch_messages(
             rows_after = execute_query(query[1], sa_conn, orderType)
             
             if(len(rows_after) == 0):
-                anchor = rows_before[0][0]   
+                anchor = rows_before[-1][0]   
             else:
                 anchor = rows_after[0][0]  
             rows += rows_before
