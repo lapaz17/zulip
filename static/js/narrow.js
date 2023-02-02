@@ -48,6 +48,7 @@ import * as widgetize from "./widgetize";
 let unnarrow_times;
 
 const LARGER_THAN_MAX_MESSAGE_ID = 10000000000000000;
+const DATE_MESSAGE_ID = 10000000000000001;
 
 function report_narrow_time(initial_core_time, initial_free_time, network_time) {
     channel.post({
@@ -528,7 +529,7 @@ export function activate(raw_operators, opts) {
             case LARGER_THAN_MAX_MESSAGE_ID:
                 anchor = "newest";
                 break;
-            case -2:
+            case DATE_MESSAGE_ID:
                 anchor = "date";
                 break;
             default:
@@ -675,7 +676,7 @@ export function maybe_add_local_messages(opts) {
     }
     // If we're looking for jumping to specific date do not search for local database and return immediately.
     if(opts.trigger == 'date'){
-        id_info.final_select_id = -2;
+        id_info.final_select_id = DATE_MESSAGE_ID;
         return;
     }
 
