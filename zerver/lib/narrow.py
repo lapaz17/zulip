@@ -1259,9 +1259,6 @@ def fetch_messages(
                 if anchored_to_right:
                     num_after = 0
 
-
-        
-        
         first_visible_message_id = get_first_visible_message_id(realm)
 
         query = limit_query_to_range(
@@ -1276,23 +1273,19 @@ def fetch_messages(
             first_visible_message_id=first_visible_message_id,
             anchor_date=anchor_date,
         )
-
-        orderType = column("message_id", Integer)
         rows = []
         if(anchor_date is not None):
-            index = 0
-            
-            rows_before = execute_query(query[0], sa_conn, orderType)
-            rows_after = execute_query(query[1], sa_conn, orderType)
-            
+            rows_before = execute_query(query[0], sa_conn)
+            rows_after = execute_query(query[1], sa_conn)
+
             if(len(rows_after) == 0):
-                anchor = rows_before[-1][0]   
+                anchor = rows_before[-1][0]
             else:
-                anchor = rows_after[0][0]  
+                anchor = rows_after[0][0]
             rows += rows_before
-            rows += rows_after   
+            rows += rows_after
         else:
-            rows = execute_query(query, sa_conn, orderType)
+            rows = execute_query(query, sa_conn)
 
     query_info = post_process_limited_query(
         rows=rows,
@@ -1316,12 +1309,12 @@ def fetch_messages(
         is_search=is_search,
     )
 
-def execute_query(query, sa_conn, orderType):
+def execute_query(query, sa_conn) -> list:
     main_query = query.subquery()
     query = (
             select(*main_query.c)
             .select_from(main_query)
-            .order_by(orderType.asc())
+            .order_by(column("message_id", Integer).asc())
         )
         # This is a hack to tag the query we use for testing
     query = query.prefix_with("/* get_messages */")

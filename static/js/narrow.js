@@ -539,7 +539,8 @@ export function activate(raw_operators, opts) {
         message_fetch.load_messages_for_narrow({
             anchor,
             cont(data, options) {
-                id_info.final_select_id = data.anchor;
+                if(data)
+                    id_info.final_select_id = data.anchor;
                 if (!select_immediately) {
                     update_selection({
                         id_info,
