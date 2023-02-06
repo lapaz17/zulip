@@ -1277,7 +1277,7 @@ def fetch_messages(
         )
         rows = []
         if(anchor_date is not None):
-            assert query is Tuple[SelectBase, SelectBase]
+            assert not isinstance(query,SelectBase)
             rows_before = execute_query(query[0], sa_conn)
             rows_after = execute_query(query[1], sa_conn)
 
@@ -1288,7 +1288,7 @@ def fetch_messages(
             rows += rows_before
             rows += rows_after
         else:
-            assert query is SelectBase
+            assert isinstance(query, SelectBase)
             rows = execute_query(query, sa_conn)
 
     query_info = post_process_limited_query(
