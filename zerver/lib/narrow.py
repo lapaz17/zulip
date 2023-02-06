@@ -1252,13 +1252,13 @@ def fetch_messages(
                     narrow,
                 )
 
-                anchored_to_left = anchor == 0
+            anchored_to_left = anchor == 0
 
-                # Set value that will be used to short circuit the after_query
-                # altogether and avoid needless conditions in the before_query.
-                anchored_to_right = anchor >= LARGER_THAN_MAX_MESSAGE_ID
-                if anchored_to_right:
-                    num_after = 0
+            # Set value that will be used to short circuit the after_query
+            # altogether and avoid needless conditions in the before_query.
+            anchored_to_right = anchor >= LARGER_THAN_MAX_MESSAGE_ID
+            if anchored_to_right:
+                num_after = 0
 
         first_visible_message_id = get_first_visible_message_id(realm)
 
