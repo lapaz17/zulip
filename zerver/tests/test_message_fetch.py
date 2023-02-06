@@ -757,7 +757,7 @@ class PostProcessTest(ZulipTestCase):
                 anchored_to_left=anchored_to_left,
                 anchored_to_right=anchored_to_right,
                 first_visible_message_id=first_visible_message_id,
-                anchor_date=None
+                anchor_date=None,
             )
 
             self.assertEqual(info.rows, out_rows)

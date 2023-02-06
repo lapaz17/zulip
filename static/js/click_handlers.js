@@ -1,5 +1,4 @@
 import $ from "jquery";
-import { data } from "jquery";
 import _ from "lodash";
 import tippy from "tippy.js";
 import WinChan from "winchan";
@@ -416,12 +415,19 @@ export function initialize() {
         mute_or_unmute_topic($(e.target), false);
     });
 
-    function on_message_timestamp_selection(date, parent){
-        var stream = $(parent).siblings(".stream_label").text();
-        var topic = $(parent).siblings(".recipient_bar_controls").children(".zulip-icon").attr("data-topic-name");
-        if(stream == ""){
+    function on_message_timestamp_selection(date, parent) {
+        let stream = $(parent).siblings(".stream_label").text();
+        let topic = $(parent)
+            .siblings(".recipient_bar_controls")
+            .children(".zulip-icon")
+            .attr("data-topic-name");
+        if (stream == "") {
             stream = $(parent).parent().siblings(".message_header").find(".stream_label").text();
-            topic = $(parent).parent().siblings(".message_header").find(".zulip-icon").attr("data-topic-name") 
+            topic = $(parent)
+                .parent()
+                .siblings(".message_header")
+                .find(".zulip-icon")
+                .attr("data-topic-name");
         }
         narrow.activate(
             [
@@ -430,14 +436,13 @@ export function initialize() {
             ],
             {trigger: "date", anchor_date: date},
         );
-
     }
 
     // DATE PICK
 
     $("body").on("click", ".message_header .recipient_row_date", (e) => {
         e.stopPropagation();
-        var date = new Date();
+        const date = new Date();
         date.setHours(0);
         date.setMinutes(0);
         date.setSeconds(0);
@@ -458,7 +463,7 @@ export function initialize() {
 
     $("body").on("click", ".message_row .date_row", (e) => {
         e.stopPropagation();
-        var date = new Date();
+        const date = new Date();
         date.setHours(0);
         date.setMinutes(0);
         date.setSeconds(0);

@@ -172,7 +172,7 @@ run_test("basics", () => {
             cont: opts.cont,
             msg_list: opts.msg_list,
             anchor: 1000,
-            anchor_date: undefined
+            anchor_date: undefined,
         });
     };
 

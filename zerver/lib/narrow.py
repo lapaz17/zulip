@@ -251,7 +251,7 @@ class NarrowBuilder:
     def __init__(
         self,
         user_profile: Optional[UserProfile],
-        msg_id_column: Union[ColumnElement[Integer],ColumnElement[DateTime]],
+        msg_id_column: Union[ColumnElement[Integer], ColumnElement[DateTime]],
         realm: Realm,
         is_web_public_query: bool = False,
     ) -> None:
@@ -823,8 +823,11 @@ def exclude_muting_conditions(
 
 
 def get_base_query_for_search(
-    user_profile: Optional[UserProfile], need_message: bool, need_user_message: bool, anchor_date: Optional[str]
-) -> Union[Tuple[Select,ColumnElement[Integer]], Tuple[Select,ColumnElement[DateTime]]]:
+    user_profile: Optional[UserProfile],
+    need_message: bool,
+    need_user_message: bool,
+    anchor_date: Optional[str],
+) -> Union[Tuple[Select, ColumnElement[Integer]], Tuple[Select, ColumnElement[DateTime]]]:
     inner_msg_id_col: Union[ColumnElement[Integer], ColumnElement[DateTime]]
     # Handle the simple case where user_message isn't involved first.
     if not need_user_message:
@@ -870,7 +873,7 @@ def get_base_query_for_search(
 
 def add_narrow_conditions(
     user_profile: Optional[UserProfile],
-    inner_msg_id_col: Union[ColumnElement[Integer],ColumnElement[DateTime]],
+    inner_msg_id_col: Union[ColumnElement[Integer], ColumnElement[DateTime]],
     query: Select,
     narrow: OptionalNarrowListT,
     is_web_public_query: bool,
@@ -929,7 +932,7 @@ def find_first_unread_anchor(
         user_profile=user_profile,
         need_message=need_message,
         need_user_message=need_user_message,
-        anchor_date=None
+        anchor_date=None,
     )
 
     query, is_search = add_narrow_conditions(
@@ -1006,7 +1009,7 @@ def limit_query_to_range(
     include_anchor: bool,
     anchored_to_left: bool,
     anchored_to_right: bool,
-    id_col: Union[ColumnElement[Integer],ColumnElement[DateTime]],
+    id_col: Union[ColumnElement[Integer], ColumnElement[DateTime]],
     first_visible_message_id: int,
     anchor_date: Optional[str],
 ) -> Union[SelectBase, Tuple[SelectBase, SelectBase]]:
@@ -1031,7 +1034,7 @@ def limit_query_to_range(
     #
     # Note that in some cases, if the anchor row isn't found, we
     # actually may fetch an extra row at one of the extremes.
-    if(anchor_date is None):
+    if anchor_date is None:
         assert anchor is not None
         if need_both_sides:
             before_anchor = anchor - 1
@@ -1074,7 +1077,6 @@ def limit_query_to_range(
         before_query = before_query.order_by(id_col.desc())
         before_query = before_query.limit(num_before)
         return before_query.self_group(), after_query.self_group()
-
 
     if need_both_sides:
         return union_all(before_query.self_group(), after_query.self_group())
@@ -1123,7 +1125,7 @@ def post_process_limited_query(
     # Also, in cases where we had non-zero values of num_before or
     # num_after, we want to know found_oldest and found_newest, so
     # that the clients will know that they got complete results.
-    if(anchor_date is not None):
+    if anchor_date is not None:
         return LimitedMessages(
             rows=list(rows),
             found_anchor=False,
@@ -1222,7 +1224,7 @@ def fetch_messages(
         need_message = True
         need_user_message = True
 
-    query: Union[SelectBase, Tuple[SelectBase,SelectBase]]
+    query: Union[SelectBase, Tuple[SelectBase, SelectBase]]
     query, inner_msg_id_col = get_base_query_for_search(
         user_profile=user_profile,
         need_message=need_message,
@@ -1241,7 +1243,7 @@ def fetch_messages(
     anchored_to_left = False
     anchored_to_right = False
     with get_sqlalchemy_connection() as sa_conn:
-        if(anchor_date is not None):
+        if anchor_date is not None:
             # TODO delete this line..
             anchored_to_left = False
         else:
@@ -1276,12 +1278,12 @@ def fetch_messages(
             anchor_date=anchor_date,
         )
         rows = []
-        if(anchor_date is not None):
-            assert not isinstance(query,SelectBase)
+        if anchor_date is not None:
+            assert not isinstance(query, SelectBase)
             rows_before = execute_query(query[0], sa_conn)
             rows_after = execute_query(query[1], sa_conn)
 
-            if(len(rows_after) == 0):
+            if len(rows_after) == 0:
                 anchor = rows_before[-1][0]
             else:
                 anchor = rows_after[0][0]
@@ -1313,14 +1315,13 @@ def fetch_messages(
         is_search=is_search,
     )
 
+
 def execute_query(query: SelectBase, sa_conn: Connection) -> list[Row]:
     main_query = query.subquery()
     query = (
-            select(*main_query.c)
-            .select_from(main_query)
-            .order_by(column("message_id", Integer).asc())
-        )
-        # This is a hack to tag the query we use for testing
+        select(*main_query.c).select_from(main_query).order_by(column("message_id", Integer).asc())
+    )
+    # This is a hack to tag the query we use for testing
     query = query.prefix_with("/* get_messages */")
     rows = list(sa_conn.execute(query).fetchall())
     return rows

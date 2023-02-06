@@ -506,7 +506,6 @@ export function activate(raw_operators, opts) {
         then_select_offset = opts.then_select_offset;
     }
 
-
     const select_immediately = id_info.local_select_id !== undefined;
 
     {
@@ -539,8 +538,9 @@ export function activate(raw_operators, opts) {
         message_fetch.load_messages_for_narrow({
             anchor,
             cont(data, options) {
-                if(data)
+                if (data) {
                     id_info.final_select_id = data.anchor;
+                }
                 if (!select_immediately) {
                     update_selection({
                         id_info,
@@ -676,7 +676,7 @@ export function maybe_add_local_messages(opts) {
         id_info.final_select_id = LARGER_THAN_MAX_MESSAGE_ID;
     }
     // If we're looking for jumping to specific date do not search for local database and return immediately.
-    if(opts.trigger == 'date'){
+    if (opts.trigger == "date") {
         id_info.final_select_id = DATE_MESSAGE_ID;
         return;
     }
