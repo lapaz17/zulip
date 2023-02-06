@@ -1243,10 +1243,7 @@ def fetch_messages(
     anchored_to_left = False
     anchored_to_right = False
     with get_sqlalchemy_connection() as sa_conn:
-        if anchor_date is not None:
-            # TODO delete this line..
-            anchored_to_left = False
-        else:
+        if anchor_date is None:
             if anchor is None:
                 # `anchor=None` corresponds to the anchor="first_unread" parameter.
                 anchor = find_first_unread_anchor(
