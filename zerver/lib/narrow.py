@@ -41,7 +41,7 @@ from sqlalchemy.sql import (
     union_all,
 )
 from sqlalchemy.sql.selectable import SelectBase
-from sqlalchemy.types import ARRAY, Boolean, Integer, Text, DateTime
+from sqlalchemy.types import ARRAY, Boolean, DateTime, Integer, Text
 
 from zerver.lib.addressee import get_user_profiles, get_user_profiles_by_ids
 from zerver.lib.exceptions import ErrorCode, JsonableError
@@ -251,7 +251,7 @@ class NarrowBuilder:
     def __init__(
         self,
         user_profile: Optional[UserProfile],
-        msg_id_column: ColumnElement[Integer],
+        msg_id_column: Union[ColumnElement[Integer],ColumnElement[DateTime]],
         realm: Realm,
         is_web_public_query: bool = False,
     ) -> None:
@@ -824,7 +824,8 @@ def exclude_muting_conditions(
 
 def get_base_query_for_search(
     user_profile: Optional[UserProfile], need_message: bool, need_user_message: bool, anchor_date: Optional[str]
-) -> Tuple[Select, Union[ColumnElement[Integer],ColumnElement[DateTime]]]:
+) -> Union[Tuple[Select,ColumnElement[Integer]], Tuple[Select,ColumnElement[DateTime]]]:
+    inner_msg_id_col: Union[ColumnElement[Integer], ColumnElement[DateTime]]
     # Handle the simple case where user_message isn't involved first.
     if not need_user_message:
         assert need_message
@@ -869,7 +870,7 @@ def get_base_query_for_search(
 
 def add_narrow_conditions(
     user_profile: Optional[UserProfile],
-    inner_msg_id_col: ColumnElement[Integer],
+    inner_msg_id_col: Union[ColumnElement[Integer],ColumnElement[DateTime]],
     query: Select,
     narrow: OptionalNarrowListT,
     is_web_public_query: bool,
@@ -1001,14 +1002,14 @@ def limit_query_to_range(
     query: Select,
     num_before: int,
     num_after: int,
-    anchor: int,
+    anchor: Optional[int],
     include_anchor: bool,
     anchored_to_left: bool,
     anchored_to_right: bool,
     id_col: Union[ColumnElement[Integer],ColumnElement[DateTime]],
     first_visible_message_id: int,
     anchor_date: Optional[str],
-) -> SelectBase:
+) -> Union[SelectBase, Tuple[SelectBase, SelectBase]]:
     """
     This code is actually generic enough that we could move it to a
     library, but our only caller for now is message search.
@@ -1031,6 +1032,7 @@ def limit_query_to_range(
     # Note that in some cases, if the anchor row isn't found, we
     # actually may fetch an extra row at one of the extremes.
     if(anchor_date is None):
+        assert anchor is not None
         if need_both_sides:
             before_anchor = anchor - 1
             after_anchor = max(anchor, first_visible_message_id)
@@ -1108,11 +1110,11 @@ def post_process_limited_query(
     rows: Sequence[MessageRowT],
     num_before: int,
     num_after: int,
-    anchor: int,
+    anchor: Optional[int],
     anchored_to_left: bool,
     anchored_to_right: bool,
     first_visible_message_id: int,
-    anchor_date: str,
+    anchor_date: Optional[str],
 ) -> LimitedMessages[MessageRowT]:
     # Our queries may have fetched extra rows if they added
     # "headroom" to the limits, but we want to truncate those
@@ -1123,7 +1125,7 @@ def post_process_limited_query(
     # that the clients will know that they got complete results.
     if(anchor_date is not None):
         return LimitedMessages(
-            rows=rows,
+            rows=list(rows),
             found_anchor=False,
             found_newest=False,
             found_oldest=False,
@@ -1181,7 +1183,7 @@ def post_process_limited_query(
 
 @dataclass
 class FetchedMessages(LimitedMessages[Row]):
-    anchor: int
+    anchor: Optional[int]
     include_history: bool
     is_search: bool
 
@@ -1196,7 +1198,7 @@ def fetch_messages(
     include_anchor: bool,
     num_before: int,
     num_after: int,
-    anchor_date: str,
+    anchor_date: Optional[str],
 ) -> FetchedMessages:
     include_history = ok_to_include_history(narrow, user_profile, is_web_public_query)
     if include_history:
@@ -1220,7 +1222,7 @@ def fetch_messages(
         need_message = True
         need_user_message = True
 
-    query: SelectBase
+    query: Union[SelectBase, Tuple[SelectBase,SelectBase]]
     query, inner_msg_id_col = get_base_query_for_search(
         user_profile=user_profile,
         need_message=need_message,
@@ -1275,6 +1277,7 @@ def fetch_messages(
         )
         rows = []
         if(anchor_date is not None):
+            assert query is Tuple[SelectBase, SelectBase]
             rows_before = execute_query(query[0], sa_conn)
             rows_after = execute_query(query[1], sa_conn)
 
@@ -1285,6 +1288,7 @@ def fetch_messages(
             rows += rows_before
             rows += rows_after
         else:
+            assert query is SelectBase
             rows = execute_query(query, sa_conn)
 
     query_info = post_process_limited_query(
@@ -1309,7 +1313,7 @@ def fetch_messages(
         is_search=is_search,
     )
 
-def execute_query(query, sa_conn) -> list:
+def execute_query(query: SelectBase, sa_conn: Connection) -> list[Row]:
     main_query = query.subquery()
     query = (
             select(*main_query.c)
