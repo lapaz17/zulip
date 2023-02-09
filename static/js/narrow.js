@@ -48,7 +48,7 @@ import * as widgetize from "./widgetize";
 let unnarrow_times;
 
 const LARGER_THAN_MAX_MESSAGE_ID = 10000000000000000;
-const DATE_MESSAGE_ID = 10000000000000001;
+const DATE_MESSAGE_ID = "DATE_ID";
 
 function report_narrow_time(initial_core_time, initial_free_time, network_time) {
     channel.post({

@@ -832,18 +832,14 @@ def get_base_query_for_search(
     # Handle the simple case where user_message isn't involved first.
     if not need_user_message:
         assert need_message
+        query = select(column("id", Integer).label("message_id")).select_from(
+            table("zerver_message")
+        )      
         if anchor_date:
-            query = select(column("id", Integer).label("message_id")).select_from(
-                table("zerver_message")
-            )
             inner_msg_id_col = literal_column("zerver_message.date_sent", DateTime)
-            return (query, inner_msg_id_col)
-        else:
-            query = select(column("id", Integer).label("message_id")).select_from(
-                table("zerver_message")
-            )
+        else: 
             inner_msg_id_col = literal_column("zerver_message.id", Integer)
-            return (query, inner_msg_id_col)
+        return (query, inner_msg_id_col)
 
     assert user_profile is not None
     if need_message:
@@ -859,7 +855,10 @@ def get_base_query_for_search(
                 )
             )
         )
-        inner_msg_id_col = column("message_id", Integer)
+        if anchor_date:
+            inner_msg_id_col = literal_column("zerver_message.date_sent", DateTime)
+        else:
+            inner_msg_id_col = column("message_id", Integer)
         return (query, inner_msg_id_col)
 
     query = (

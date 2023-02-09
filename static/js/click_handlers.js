@@ -416,24 +416,10 @@ export function initialize() {
     });
 
     function on_message_timestamp_selection(date, parent) {
-        let stream = $(parent).siblings(".stream_label").text();
-        let topic = $(parent)
-            .siblings(".recipient_bar_controls")
-            .children(".zulip-icon")
-            .attr("data-topic-name");
-        if (stream == "") {
-            stream = $(parent).parent().siblings(".message_header").find(".stream_label").text();
-            topic = $(parent)
-                .parent()
-                .siblings(".message_header")
-                .find(".zulip-icon")
-                .attr("data-topic-name");
-        }
+        const hash = window.location.hash.split("/");
+        let operators = hash_util.parse_narrow(hash);
         narrow.activate(
-            [
-                {operator: "stream", operand: stream},
-                {operator: "topic", operand: topic},
-            ],
+            operators,
             {trigger: "date", anchor_date: date},
         );
     }
