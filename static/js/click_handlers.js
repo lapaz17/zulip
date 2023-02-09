@@ -415,7 +415,7 @@ export function initialize() {
         mute_or_unmute_topic($(e.target), false);
     });
 
-    function on_message_timestamp_selection(date, parent) {
+    function on_message_timestamp_selection(date) {
         const hash = window.location.hash.split("/");
         let operators = hash_util.parse_narrow(hash);
         narrow.activate(
@@ -441,7 +441,6 @@ export function initialize() {
                 closeOnSelect: false,
                 enableTime: false,
             },
-            e.currentTarget,
         );
     });
 
