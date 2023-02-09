@@ -5105,7 +5105,6 @@ paths:
             Find a message at the specified date.
           schema:
             type: string
-            default: false
           example: "2023-02-20T00:00:00+03:00"
         - name: num_before
           in: query

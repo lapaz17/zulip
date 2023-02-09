@@ -2889,6 +2889,56 @@ class GetOldMessagesTest(ZulipTestCase):
         self.assertEqual(data["history_limited"], False)
         messages_matches_ids(messages, message_ids[6:9])
 
+        data = self.get_messages_response(
+            anchor='date', num_before=0, num_after=3, anchor_date=datetime.datetime.now().isoformat()
+        )
+
+        messages = data["messages"]
+        print(messages)
+        self.assertEqual(data["found_anchor"], True)
+        self.assertEqual(data["found_oldest"], False)
+        self.assertEqual(data["found_newest"], False)
+        self.assertEqual(data["history_limited"], False)
+        messages_matches_ids(messages, message_ids[6:9])
+
+    def test_anchor_date(self) -> None:
+        self.login("hamlet")
+        stream_name = "Verona"
+        Message.objects.all().delete()
+
+        message_ids = []
+        for i in range(100):
+            message_ids.append(self.send_stream_message(self.example_user("cordelia"), stream_name))
+        
+       
+        narrow = [
+            dict(operator="stream", operand=stream_name),
+        ]
+
+        req = dict(
+            narrow=orjson.dumps(narrow).decode(),
+            anchor='date',
+            anchor_date=datetime.datetime.now().isoformat(),
+            num_before=50,
+            num_after=50,
+        )
+
+        payload = self.client_get("/json/messages", req)
+        self.assert_json_success(payload)
+        result = orjson.loads(payload.content)
+        messages = result["messages"]
+        self.assert_length(messages, 50)
+
+        req["num_before"] = 50
+        req["num_after"] = 70
+        req["anchor_date"] = (datetime.datetime.now() + datetime.timedelta(hours=-1)).isoformat()
+
+        payload = self.client_get("/json/messages", req)
+        self.assert_json_success(payload)
+        result = orjson.loads(payload.content)
+        messages = result["messages"]
+        self.assert_length(messages, 70)
+
     def test_missing_params(self) -> None:
         """
         anchor, num_before, and num_after are all required
