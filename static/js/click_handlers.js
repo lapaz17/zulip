@@ -452,9 +452,7 @@ export function initialize() {
                 position: "auto center",
                 closeOnSelect: false,
                 enableTime: false,
-            },
-            e.currentTarget,
-        );
+            });
     });
 
     // RECENT TOPICS
