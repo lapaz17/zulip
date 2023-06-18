@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _
 from zerver.actions.message_flags import (
     do_mark_all_as_read,
     do_mark_stream_messages_as_read,
+    do_mark_stream_messages_as_unread,
     do_update_message_flags,
 )
 from zerver.lib.exceptions import ErrorCode, JsonableError
@@ -169,6 +170,35 @@ def mark_topic_as_read(
             raise JsonableError(_("No such topic '{}'").format(topic_name))
 
     count = do_mark_stream_messages_as_read(user_profile, stream.recipient_id, topic_name)
+
+    log_data_str = f"[{count} updated]"
+    log_data = RequestNotes.get_notes(request).log_data
+    assert log_data is not None
+    log_data["extra"] = log_data_str
+
+    return json_success(request)
+
+@has_request_variables
+def mark_topic_as_unread(
+    request: HttpRequest,
+    user_profile: UserProfile,
+    stream_id: int = REQ(json_validator=check_int),
+    topic_name: str = REQ(),
+) -> HttpResponse:
+    stream, sub = access_stream_by_id(user_profile, stream_id)
+    assert stream.recipient_id is not None
+
+    if topic_name:
+        topic_exists = user_message_exists_for_topic(
+            user_profile=user_profile,
+            recipient_id=stream.recipient_id,
+            topic_name=topic_name,
+        )
+
+        if not topic_exists:
+            raise JsonableError(_("No such topic '{}'").format(topic_name))
+
+    count = do_mark_stream_messages_as_unread(user_profile, stream.recipient_id, topic_name)
 
     log_data_str = f"[{count} updated]"
     log_data = RequestNotes.get_notes(request).log_data

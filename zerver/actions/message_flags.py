@@ -148,6 +148,46 @@ def do_mark_stream_messages_as_read(
     )
     return count
 
+def do_mark_stream_messages_as_unread(
+    user_profile: UserProfile, stream_recipient_id: int, topic_name: Optional[str] = None
+) -> int:
+    with transaction.atomic(savepoint=False):
+        query = (
+            UserMessage.select_for_update_query()
+            .filter(
+                user_profile=user_profile,
+                message__recipient_id=stream_recipient_id,
+            )
+        )
+
+        if topic_name:
+            query = filter_by_topic_name_via_message(
+                query=query,
+                topic_name=topic_name,
+            )
+
+        message_ids = list(query.values_list("message_id", flat=True))
+
+        if len(message_ids) == 0:
+            return 0
+
+        count = query.update(
+            flags=F("flags").bitand(~UserMessage.flags.read),
+        )
+
+    event = asdict(
+        ReadMessagesEvent(
+            messages=message_ids,
+            all=False,
+        )
+    )
+    event_time = timezone_now()
+
+    send_event(user_profile.realm, event, [user_profile.id])
+    do_clear_mobile_push_notifications_for_ids([user_profile.id], message_ids)
+    return count
+
+
 
 def do_mark_muted_user_messages_as_read(
     user_profile: UserProfile,

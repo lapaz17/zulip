@@ -50,6 +50,7 @@ import * as stream_popover from "./stream_popover";
 import * as timerender from "./timerender";
 import {parse_html} from "./ui_util";
 import * as unread_ops from "./unread_ops";
+import * as unread from "./unread";
 import {user_settings} from "./user_settings";
 import * as user_topics from "./user_topics";
 
@@ -463,11 +464,12 @@ export function initialize() {
             const topic_name = $(elt).closest("li").expectOne().attr("data-topic-name");
             const url = $(elt).closest("li").find(".topic-name").expectOne().prop("href");
             const stream_id = stream_popover.elem_to_stream_id($stream_li);
-
+            let x = unread.num_unread_for_stream(stream_id);
             instance.context = popover_menus_data.get_topic_popover_content_context({
                 stream_id,
                 topic_name,
                 url,
+                unread_count: unread.num_unread_for_stream(stream_id).unmuted_count > 0,
             });
             instance.setContent(parse_html(render_topic_sidebar_actions(instance.context)));
         },
@@ -526,6 +528,11 @@ export function initialize() {
 
             $popper.one("click", ".sidebar-popover-mark-topic-read", () => {
                 unread_ops.mark_topic_as_read(stream_id, topic_name);
+                instance.hide();
+            });
+
+            $popper.one("click", ".sidebar-popover-mark-topic-unread", () => {
+                unread_ops.mark_topic_as_unread(stream_id, topic_name);
                 instance.hide();
             });
 
