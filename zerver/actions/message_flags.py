@@ -27,7 +27,7 @@ class ReadMessagesEvent:
     messages: List[int]
     all: bool
     type: str = field(default="update_message_flags", init=False)
-    op: str = field(default="add", init=False)
+    op: str = field(default="add", init=True)
     operation: str = field(default="add", init=False)
     flag: str = field(default="read", init=False)
 
@@ -179,6 +179,7 @@ def do_mark_stream_messages_as_unread(
         ReadMessagesEvent(
             messages=message_ids,
             all=False,
+            op='rem',
         )
     )
     event_time = timezone_now()

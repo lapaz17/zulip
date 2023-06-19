@@ -830,7 +830,14 @@ export function dispatch_normal_event(event) {
                 case "read":
                     if (event.op === "add") {
                         unread_ops.process_read_messages_event(event.messages);
-                    } else {
+                    } else if(event.op === "rem"){
+                        unread_ops.process_unread_messages_event({
+                            message_ids: event.messages,
+                            message_details: event.op,
+                        });
+                    } 
+                    
+                    else {
                         unread_ops.process_unread_messages_event({
                             message_ids: event.messages,
                             message_details: event.message_details,

@@ -320,6 +320,7 @@ export function process_unread_messages_event({message_ids, message_details}) {
     }
 
     for (const message_id of message_ids) {
+        if(message_details != 'rem' ){
         const message = message_store.get(message_id);
         const message_info = message_details[message_id];
         let mentioned_me_directly;
@@ -365,6 +366,16 @@ export function process_unread_messages_event({message_ids, message_details}) {
             unread: true,
             user_ids_string,
         });
+        } else{
+            const message = message_store.get(message_id);
+            unread.process_unread_message({
+                id: message_id,
+                stream_id: message.stream_id,
+                topic: message.topic,
+                type: message.type,
+                initBy: "user"
+            });
+        }
     }
 
     // Update UI for the messages marked as unread.

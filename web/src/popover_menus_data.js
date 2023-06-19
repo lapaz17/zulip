@@ -123,7 +123,7 @@ export function get_actions_popover_content_context(message_id) {
     };
 }
 
-export function get_topic_popover_content_context({stream_id, topic_name, url}) {
+export function get_topic_popover_content_context({stream_id, topic_name, url, unread_count}) {
     const sub = sub_store.get(stream_id);
     const topic_muted = user_topics.is_topic_muted(sub.stream_id, topic_name);
     const topic_unmuted = user_topics.is_topic_unmuted(sub.stream_id, topic_name);
@@ -144,5 +144,6 @@ export function get_topic_popover_content_context({stream_id, topic_name, url}) 
         color: sub.color,
         has_starred_messages,
         url,
+        unread_count,
     };
 }

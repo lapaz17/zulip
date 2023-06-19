@@ -667,6 +667,9 @@ export function process_unread_message(message) {
             stream_id: message.stream_id,
             topic: message.topic,
         });
+        if(message.initBy != undefined){
+            return;
+        }
     }
 
     update_message_for_mention(message);
