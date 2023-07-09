@@ -320,51 +320,62 @@ export function process_unread_messages_event({message_ids, message_details}) {
     }
 
     for (const message_id of message_ids) {
-        const message = message_store.get(message_id);
-        const message_info = message_details[message_id];
-        let mentioned_me_directly;
-
-        if (message) {
-            message.unread = true;
-            mentioned_me_directly = message.mentioned_me_directly;
+        if (message_details === "unread_all") {
+            const message = message_store.get(message_id);
+            unread.process_unread_message({
+                id: message_id,
+                stream_id: message.stream_id,
+                topic: message.topic,
+                type: message.type,
+                initBy: "user",
+            });
         } else {
-            // BUG: If we don't have a copy of the message locally, we
-            // have no way to correctly compute whether the mentions
-            // are personal mentions or wildcard mentions, because
-            // message_info doesn't contain that information... so we
-            // guess that it's a personal mention.
-            //
-            // This is a correctness bug, but is likely very rare: We
-            // will have a copy of all unread messages locally once
-            // the app has finished the message_fetch backfill
-            // sequence (and also will certainly have this message if
-            // this is the client where the "Mark as unread" action
-            // was taken). Further, the distinction is only important
-            // for mentions in muted streams, where we count direct
-            // mentions as important enough to promote, and wildcard
-            // mentions as not.
-            //
-            // A possible fix would be to just fetch the fully message
-            // from the API here, but the right fix likely requires API changes.
-            mentioned_me_directly = message_info.mentioned;
+            const message = message_store.get(message_id);
+            const message_info = message_details[message_id];
+            let mentioned_me_directly;
+
+            if (message) {
+                message.unread = true;
+                mentioned_me_directly = message.mentioned_me_directly;
+            } else {
+                // BUG: If we don't have a copy of the message locally, we
+                // have no way to correctly compute whether the mentions
+                // are personal mentions or wildcard mentions, because
+                // message_info doesn't contain that information... so we
+                // guess that it's a personal mention.
+                //
+                // This is a correctness bug, but is likely very rare: We
+                // will have a copy of all unread messages locally once
+                // the app has finished the message_fetch backfill
+                // sequence (and also will certainly have this message if
+                // this is the client where the "Mark as unread" action
+                // was taken). Further, the distinction is only important
+                // for mentions in muted streams, where we count direct
+                // mentions as important enough to promote, and wildcard
+                // mentions as not.
+                //
+                // A possible fix would be to just fetch the fully message
+                // from the API here, but the right fix likely requires API changes.
+                mentioned_me_directly = message_info.mentioned;
+            }
+
+            let user_ids_string;
+
+            if (message_info.type === "private") {
+                user_ids_string = people.pm_lookup_key_from_user_ids(message_info.user_ids);
+            }
+
+            unread.process_unread_message({
+                id: message_id,
+                mentioned: message_info.mentioned,
+                mentioned_me_directly,
+                stream_id: message_info.stream_id,
+                topic: message_info.topic,
+                type: message_info.type,
+                unread: true,
+                user_ids_string,
+            });
         }
-
-        let user_ids_string;
-
-        if (message_info.type === "private") {
-            user_ids_string = people.pm_lookup_key_from_user_ids(message_info.user_ids);
-        }
-
-        unread.process_unread_message({
-            id: message_id,
-            mentioned: message_info.mentioned,
-            mentioned_me_directly,
-            stream_id: message_info.stream_id,
-            topic: message_info.topic,
-            type: message_info.type,
-            unread: true,
-            user_ids_string,
-        });
     }
 
     // Update UI for the messages marked as unread.
@@ -452,6 +463,14 @@ export function mark_stream_as_read(stream_id, cont) {
 export function mark_topic_as_read(stream_id, topic, cont) {
     channel.post({
         url: "/json/mark_topic_as_read",
+        data: {stream_id, topic_name: topic},
+        success: cont,
+    });
+}
+
+export function mark_topic_as_unread(stream_id, topic, cont) {
+    channel.post({
+        url: "/json/mark_topic_as_unread",
         data: {stream_id, topic_name: topic},
         success: cont,
     });

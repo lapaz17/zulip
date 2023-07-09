@@ -75,6 +75,7 @@ from zerver.views.message_flags import (
     mark_all_as_read,
     mark_stream_as_read,
     mark_topic_as_read,
+    mark_topic_as_unread,
     update_message_flags,
     update_message_flags_for_narrow,
 )
@@ -320,6 +321,7 @@ v1_api_and_json_patterns = [
     rest_path("mark_all_as_read", POST=mark_all_as_read),
     rest_path("mark_stream_as_read", POST=mark_stream_as_read),
     rest_path("mark_topic_as_read", POST=mark_topic_as_read),
+    rest_path("mark_topic_as_unread", POST=mark_topic_as_unread),
     rest_path("zcommand", POST=zcommand_backend),
     # Endpoints for syncing drafts.
     rest_path("drafts", GET=fetch_drafts, POST=create_drafts),

@@ -4796,6 +4796,33 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/SimpleSuccess"
+  /mark_topic_as_unread:
+    post:
+      operationId: mark-topic-as-unread
+      summary: Mark messages in a topic as unread
+      tags: ["messages"]
+      description: |
+        Mark all the read messages in a topic as unread.
+      parameters:
+        - name: stream_id
+          in: query
+          description: |
+            The ID of the stream to access.
+          schema:
+            type: integer
+          example: 43
+          required: true
+        - name: topic_name
+          in: query
+          description: |
+            The name of the topic whose messages should be marked as unread.
+          schema:
+            type: string
+          example: new coffee machine
+          required: true
+      responses:
+        "200":
+          $ref: "#/components/responses/SimpleSuccess"
   /attachments:
     get:
       operationId: get-attachments

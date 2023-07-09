@@ -667,6 +667,10 @@ export function process_unread_message(message) {
             stream_id: message.stream_id,
             topic: message.topic,
         });
+        // do not call update_message_for_mention whenever user clicks `mark all messages as unread`, no need.
+        if (message.initBy !== undefined) {
+            return;
+        }
     }
 
     update_message_for_mention(message);

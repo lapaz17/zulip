@@ -830,6 +830,24 @@ def mark_topic_as_read(client: Client) -> None:
     validate_against_openapi_schema(result, "/mark_stream_as_read", "post", "200")
 
 
+@openapi_test_function("/mark_topic_as_unread:post")
+def mark_topic_as_unread(client: Client) -> None:
+    # Grab an existing topic name
+    topic_name = client.get_stream_topics(1)["topics"][0]["name"]
+
+    # {code_example|start}
+    # Mark the unread messages in stream 1's topic "topic_name" as read
+    request = {"stream_id": 1, "topic_name": topic_name}
+
+    result = client.call_endpoint(
+        url="/mark_topic_as_unread",
+        method="POST",
+        request=request,
+    )
+    # {code_example|end}
+    validate_against_openapi_schema(result, "/mark_topic_as_unread", "post", "200")
+
+
 @openapi_test_function("/users/me/subscriptions/properties:post")
 def update_subscription_settings(client: Client) -> None:
     # {code_example|start}
@@ -1533,6 +1551,7 @@ def test_messages(client: Client, nonadmin_client: Client) -> None:
     mark_all_as_read(client)
     mark_stream_as_read(client)
     mark_topic_as_read(client)
+    mark_topic_as_unread(client)
     update_message_flags(client)
 
     test_nonexistent_stream_error(client)

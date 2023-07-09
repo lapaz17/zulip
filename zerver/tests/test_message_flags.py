@@ -4,7 +4,7 @@ from unittest import mock
 import orjson
 from django.db import connection, transaction
 
-from zerver.actions.message_flags import do_update_message_flags
+from zerver.actions.message_flags import do_mark_stream_messages_as_unread, do_update_message_flags
 from zerver.actions.streams import do_change_stream_permission
 from zerver.actions.user_topics import do_set_user_topic_visibility_policy
 from zerver.lib.fix_unreads import fix, fix_unsubscribed
@@ -368,11 +368,23 @@ class UnreadCountTests(ZulipTestCase):
         )
         self.assert_json_error(result, "Invalid stream ID")
 
-    def test_mark_all_topics_unread_with_invalid_stream_name(self) -> None:
+    def test_mark_all_topics_read_with_invalid_stream_name(self) -> None:
         self.login("hamlet")
         invalid_stream_id = "12345678"
         result = self.client_post(
             "/json/mark_topic_as_read",
+            {
+                "stream_id": invalid_stream_id,
+                "topic_name": "whatever",
+            },
+        )
+        self.assert_json_error(result, "Invalid stream ID")
+
+    def test_mark_all_topics_unread_with_invalid_stream_name(self) -> None:
+        self.login("hamlet")
+        invalid_stream_id = "12345678"
+        result = self.client_post(
+            "/json/mark_topic_as_unread",
             {
                 "stream_id": invalid_stream_id,
                 "topic_name": "whatever",
@@ -424,11 +436,76 @@ class UnreadCountTests(ZulipTestCase):
             if msg.user_profile_id == user_profile.id:
                 self.assertFalse(msg.flags.read)
 
+    def test_mark_all_in_stream_topic_unread(self) -> None:
+        self.login("hamlet")
+        user_profile = self.example_user("hamlet")
+        self.subscribe(user_profile, "test_stream")
+
+        message_id = self.send_stream_message(
+            self.example_user("hamlet"), "test_stream", "hello", "test_topic"
+        )
+        unrelated_message_id = self.send_stream_message(
+            self.example_user("hamlet"), "Denmark", "hello", "Denmark2"
+        )
+        with self.capture_send_event_calls(expected_num_events=1) as events:
+            result = self.client_post(
+                "/json/mark_topic_as_unread",
+                {
+                    "stream_id": get_stream("test_stream", user_profile.realm).id,
+                    "topic_name": "test_topic",
+                },
+            )
+
+        self.assert_json_success(result)
+
+        event = events[0]["event"]
+        expected = dict(
+            operation="remove",
+            messages=[message_id],
+            flag="read",
+            type="update_message_flags",
+            all=False,
+            op="unread_all",
+        )
+        differences = [key for key in expected if expected[key] != event[key]]
+        self.assert_length(differences, 0)
+
+        um = list(UserMessage.objects.filter(message=message_id))
+        for msg in um:
+            if msg.user_profile_id == user_profile.id:
+                self.assertFalse(msg.flags.read)
+
+        unrelated_messages = list(UserMessage.objects.filter(message=unrelated_message_id))
+        for msg in unrelated_messages:
+            if msg.user_profile_id == user_profile.id:
+                self.assertFalse(msg.flags.read)
+
+    def test_mark_all_in_stream_unread_zero_message_count(self) -> None:
+        self.login("hamlet")
+        user_profile = self.example_user("hamlet")
+        self.make_stream("Denmark2", user_profile.realm)
+        count = do_mark_stream_messages_as_unread(
+            user_profile, get_stream("Denmark2", user_profile.realm).id
+        )
+        self.assertEqual(count, 0)
+
     def test_mark_all_in_invalid_topic_read(self) -> None:
         self.login("hamlet")
         invalid_topic_name = "abc"
         result = self.client_post(
             "/json/mark_topic_as_read",
+            {
+                "stream_id": get_stream("Denmark", get_realm("zulip")).id,
+                "topic_name": invalid_topic_name,
+            },
+        )
+        self.assert_json_error(result, "No such topic 'abc'")
+
+    def test_mark_all_in_invalid_topic_unread(self) -> None:
+        self.login("hamlet")
+        invalid_topic_name = "abc"
+        result = self.client_post(
+            "/json/mark_topic_as_unread",
             {
                 "stream_id": get_stream("Denmark", get_realm("zulip")).id,
                 "topic_name": invalid_topic_name,

@@ -767,6 +767,15 @@ exports.fixtures = {
         all: false,
     },
 
+    update_message_flags__read_remove_all: {
+        type: "update_message_flags",
+        op: "unread_all",
+        operation: "remove",
+        flag: "read",
+        messages: [888],
+        all: false,
+    },
+
     update_message_flags__starred_add: {
         type: "update_message_flags",
         op: "add",

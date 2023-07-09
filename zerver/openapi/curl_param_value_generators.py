@@ -187,6 +187,20 @@ def get_denmark_stream_id_and_topic() -> Dict[str, object]:
     }
 
 
+@openapi_param_value_generator(["/mark_topic_as_unread:post"])
+def get_denmark_stream_id_and_topic_unread() -> Dict[str, object]:
+    stream_name = "Denmark"
+    topic_name = "Tivoli Gardens"
+
+    helpers.subscribe(helpers.example_user("iago"), stream_name)
+    helpers.send_stream_message(helpers.example_user("hamlet"), stream_name, topic_name=topic_name)
+
+    return {
+        "stream_id": helpers.get_stream_id(stream_name),
+        "topic_name": topic_name,
+    }
+
+
 @openapi_param_value_generator(["/users/me/subscriptions/properties:post"])
 def update_subscription_data() -> Dict[str, object]:
     profile = helpers.example_user("iago")

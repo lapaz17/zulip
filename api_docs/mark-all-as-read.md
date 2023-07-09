@@ -87,3 +87,33 @@
 #### Example response(s)
 
 {generate_code_example|/mark_topic_as_read:post|fixture}
+
+{generate_api_header(/mark_topic_as_unread:post)}
+
+## Usage examples
+
+{start_tabs}
+
+{generate_code_example(python)|/mark_topic_as_unread:post|example}
+
+{generate_code_example(javascript)|/mark_topic_as_unread:post|example}
+
+{tab|curl}
+
+{generate_code_example(curl)|/mark_topic_as_unread:post|example}
+
+{end_tabs}
+
+## Parameters
+
+{generate_api_arguments_table|zulip.yaml|/mark_topic_as_unread:post}
+
+{generate_parameter_description(/mark_topic_as_unread:post)}
+
+## Response
+
+{generate_response_description(/mark_topic_as_unread:post)}
+
+#### Example response(s)
+
+{generate_code_example|/mark_topic_as_unread:post|fixture}
